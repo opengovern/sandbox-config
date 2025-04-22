@@ -8,6 +8,7 @@ metadata:
   value: Enforce least privilege and minimize security risk by ensuring the powerful 'cluster-admin' role is only granted when absolutely necessary and to trusted entities, excluding known/approved bindings.
 integration_type:
   - kubernetes_cluster
+is_view: false
 parameters:
   - key: excluded_binding_titles
     # Comma-separated list of ClusterRoleBinding titles (exact match) to exclude from findings.
