@@ -13,13 +13,13 @@ query: |
     p.platform_integration_id,
     p.namespace || '/' || p.title AS resource, -- Use namespace/name as unique resource identifier
     'alarm' as status,
-    'Pod ''' || p.title || ''' in namespace ''' || p.namespace || ''' has privileged container ''' || (c ->> 'name') || '''.' AS reason,
+    'Pod ''' || p.title || ''' in namespace ''' || p.namespace || ''' has privileged container ''' || (c ->> 'Name') || '''.' AS reason,
     jsonb_build_object(
       'pod_title', p.title,
       'namespace', p.namespace,
-      'container_name', c ->> 'name',
-      'container_image', c ->> 'image',
-      'container_security_context', c -> 'securityContext',
+      'container_name', c ->> 'Name',
+      'container_image', c ->> 'Image',
+      'container_security_context', c -> 'SecurityContext',
       'node_name', p.node_name
     ) AS finding_details
   FROM
@@ -27,7 +27,7 @@ query: |
     jsonb_array_elements(COALESCE(p.containers, '[]'::jsonb)) AS c -- Use jsonb_array_elements for safety
   WHERE
     -- Check if securityContext exists and privileged is explicitly true
-    c -> 'securityContext' ->> 'privileged' = 'true'
+    c -> 'SecurityContext' ->> 'Privileged' = 'true'
   ORDER BY
     p.platform_integration_id ASC,
     resource ASC;

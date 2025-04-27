@@ -25,18 +25,18 @@ query: |
       cr.platform_integration_id,
       cr.title,
       jsonb_agg(r) FILTER (WHERE
-        jsonb_path_exists(r -> 'verbs', '$[*] ? (@ == "*")') OR
-        jsonb_path_exists(r -> 'apiGroups', '$[*] ? (@ == "*")') OR
-        jsonb_path_exists(r -> 'resources', '$[*] ? (@ == "*")')
+        jsonb_path_exists(r -> 'Verbs', '$[*] ? (@ == "*")') OR
+        jsonb_path_exists(r -> 'ApiGroups', '$[*] ? (@ == "*")') OR
+        jsonb_path_exists(r -> 'Resources', '$[*] ? (@ == "*")')
       ) AS wildcard_rules
     FROM
       k8_cluster_role cr,
       jsonb_array_elements(COALESCE(cr.rules, '[]'::jsonb)) AS r
     GROUP BY cr.platform_integration_id, cr.title
     HAVING jsonb_agg(r) FILTER (WHERE
-        jsonb_path_exists(r -> 'verbs', '$[*] ? (@ == "*")') OR
-        jsonb_path_exists(r -> 'apiGroups', '$[*] ? (@ == "*")') OR
-        jsonb_path_exists(r -> 'resources', '$[*] ? (@ == "*")')
+        jsonb_path_exists(r -> 'Verbs', '$[*] ? (@ == "*")') OR
+        jsonb_path_exists(r -> 'ApiGroups', '$[*] ? (@ == "*")') OR
+        jsonb_path_exists(r -> 'Resources', '$[*] ? (@ == "*")')
       ) IS NOT NULL -- Ensure at least one rule matched the wildcard condition
   )
   SELECT

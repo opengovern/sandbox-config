@@ -33,14 +33,14 @@ query: |
       p.namespace,
       p.title,
       p.node_name,
-      c ->> 'name' as container_name,
-      c ->> 'image' as container_image,
-      c -> 'securityContext' as container_security_context
+      c ->> 'Name' as container_name,
+      c ->> 'Image' as container_image,
+      c -> 'SecurityContext' as container_security_context
     FROM
       k8_pod AS p,
       jsonb_array_elements(COALESCE(p.containers, '[]'::jsonb)) AS c
     WHERE
-      c -> 'securityContext' ->> 'privileged' = 'true'
+      c -> 'SecurityContext' ->> 'Privileged' = 'true'
   )
   -- Now, apply exclusions and format the output
   SELECT

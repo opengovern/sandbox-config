@@ -13,13 +13,13 @@ query: |
     p.platform_integration_id,
     p.namespace || '/' || p.title AS resource,
     'alarm' AS status,
-    'Pod ''' || p.title || ''' in namespace ''' || p.namespace || ''' container ''' || (c ->> 'name') || ''' may run as root.' AS reason,
+    'Pod ''' || p.title || ''' in namespace ''' || p.namespace || ''' container ''' || (c ->> 'Name') || ''' may run as root.' AS reason,
     jsonb_build_object(
       'pod_title', p.title,
       'namespace', p.namespace,
-      'container_name', c ->> 'name',
-      'container_image', c ->> 'image',
-      'container_security_context', c -> 'securityContext',
+      'container_name', c ->> 'Name',
+      'container_image', c ->> 'Image',
+      'container_security_context', c -> 'SecurityContext',
       'pod_security_context', p.security_context,
       'node_name', p.node_name
     ) AS finding_details
@@ -29,22 +29,22 @@ query: |
   WHERE
     -- Condition 1: Container explicitly configured to run as root
     (
-      (c -> 'securityContext' ->> 'runAsNonRoot' = 'false') -- Explicitly false
+      (c -> 'SecurityContext' ->> 'RunAsNonRoot' = 'false') -- Explicitly false
       OR
-      ( (c -> 'securityContext' ->> 'runAsNonRoot' IS NULL) AND (c -> 'securityContext' ->> 'runAsUser' = '0') ) -- runAsNonRoot is null, and runAsUser is 0
+      ( (c -> 'SecurityContext' ->> 'RunAsNonRoot' IS NULL) AND (c -> 'SecurityContext' ->> 'RunAsUser' = '0') ) -- runAsNonRoot is null, and runAsUser is 0
     )
     -- Condition 2: Pod context forces root, and container doesn't override
     OR
     (
-      ( (p.security_context ->> 'runAsNonRoot' = 'false') OR ( (p.security_context ->> 'runAsNonRoot' IS NULL) AND (p.security_context ->> 'runAsUser' = '0') ) ) -- Pod context forces root
-      AND (c -> 'securityContext' ->> 'runAsUser' IS NULL) -- Container does not specify user
-      AND (c -> 'securityContext' ->> 'runAsNonRoot' IS NULL OR c -> 'securityContext' ->> 'runAsNonRoot' = 'false') -- Container does not specify runAsNonRoot=true
+      ( (p.security_context ->> 'RunAsNonRoot' = 'false') OR ( (p.security_context ->> 'RunAsNonRoot' IS NULL) AND (p.security_context ->> 'RunAsUser' = '0') ) ) -- Pod context forces root
+      AND (c -> 'SecurityContext' ->> 'RunAsUser' IS NULL) -- Container does not specify user
+      AND (c -> 'SecurityContext' ->> 'RunAsNonRoot' IS NULL OR c -> 'SecurityContext' ->> 'RunAsNonRoot' = 'false') -- Container does not specify runAsNonRoot=true
     )
     -- Condition 3: Neither Pod nor Container specifies user/nonRoot (defaults to image definition, often root) - check if *no* setting prevents root
     OR
     (
-       (p.security_context ->> 'runAsUser' IS NULL AND p.security_context ->> 'runAsNonRoot' IS NULL) -- Pod has no relevant settings
-       AND (c -> 'securityContext' ->> 'runAsUser' IS NULL AND c -> 'securityContext' ->> 'runAsNonRoot' IS NULL) -- Container has no relevant settings
+       (p.security_context ->> 'RunAsUser' IS NULL AND p.security_context ->> 'RunAsNonRoot' IS NULL) -- Pod has no relevant settings
+       AND (c -> 'SecurityContext' ->> 'RunAsUser' IS NULL AND c -> 'SecurityContext' ->> 'RunAsNonRoot' IS NULL) -- Container has no relevant settings
     )
   ORDER BY
     p.platform_integration_id ASC,
